@@ -1,13 +1,9 @@
 # n8n-nodes-merge
 
-This is an n8n community node that connects AI agents to [Merge Agent Handler](https://merge.dev/agent-handler) Tool Packs via [MCP (Model Context Protocol)](https://modelcontextprotocol.io/).
-
-Merge Agent Handler gives your AI agents access to pre-built integrations across HRIS, ATS, CRM, Accounting, Ticketing, File Storage, and more — all through a single API.
-
-[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
+Community nodes for [n8n](https://n8n.io/) that integrate with [Merge](https://merge.dev/) products.
 
 [Installation](#installation) |
-[Configuration](#configuration) |
+[Nodes](#nodes) |
 [Compatibility](#compatibility) |
 [Resources](#resources)
 
@@ -15,16 +11,22 @@ Merge Agent Handler gives your AI agents access to pre-built integrations across
 
 Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
-## Configuration
+## Nodes
 
-### Prerequisites
+### Merge Agent Handler Tool
+
+Connects n8n AI agents to [Merge Agent Handler](https://merge.dev/agent-handler) Tool Packs via [MCP (Model Context Protocol)](https://modelcontextprotocol.io/).
+
+Merge Agent Handler gives your AI agents access to pre-built integrations across HRIS, ATS, CRM, Accounting, Ticketing, File Storage, and more — all through a single API.
+
+#### Prerequisites
 
 1. A [Merge Agent Handler](https://ah.merge.dev/) account
 2. An API key (Production or Test Access Key) from the Merge Agent Handler dashboard
 3. At least one [Tool Pack](https://ah.merge.dev/tool-packs) created with connectors configured
 4. At least one [Registered User](https://ah.merge.dev/registered-users) with connectors pre-authenticated
 
-### Setup
+#### Setup
 
 1. In n8n, add the **Merge Agent Handler Tool** node to your workflow
 2. Create a new credential with your Merge Agent Handler API key
@@ -42,9 +44,9 @@ The node exposes all tools from the selected Tool Pack to the connected AI agent
 
 ## Resources
 
+- [Merge](https://merge.dev/)
 - [Merge Agent Handler Documentation](https://docs.ah.merge.dev/Overview/Agent-Handler-intro)
 - [n8n Community Nodes Documentation](https://docs.n8n.io/integrations/community-nodes/)
-- [Merge Agent Handler Dashboard](https://ah.merge.dev/)
 
 ## License
 
