@@ -1,0 +1,55 @@
+{
+	"name": "n8n-nodes-merge",
+	"version": "0.1.0",
+	"description": "n8n community node for Merge Agent Handler - connect AI agents to Merge Tool Packs",
+	"license": "MIT",
+	"keywords": [
+		"n8n-community-node-package"
+	],
+	"author": {
+		"name": "Merge"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/merge-api/n8n-nodes-merge.git"
+	},
+	"scripts": {
+		"build": "n8n-node build && node scripts/postbuild.js",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"prepublishOnly": "npm run build"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/MergeAgentHandlerApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/MergeAgentHandlerTool/MergeAgentHandlerTool.node.js"
+		]
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@langchain/core": ">=0.3.0",
+		"@n8n/node-cli": "^0.18.0",
+		"eslint": "9.32.0",
+		"prettier": "3.6.2",
+		"typescript": "5.9.2",
+		"zod": "^3.22.0"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*",
+		"@langchain/core": ">=0.3.0",
+		"zod": ">=3.22.0"
+	},
+	"overrides": {
+		"change-case": "4.1.2"
+	}
+}
