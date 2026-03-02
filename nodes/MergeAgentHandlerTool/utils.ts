@@ -1,4 +1,3 @@
-import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import type { ZodTypeAny } from 'zod';
 
@@ -79,7 +78,48 @@ export function jsonSchemaToZodObject(schema: McpToolInputSchema): AnyZodObject 
 }
 
 /**
- * Create a single DynamicStructuredTool that dispatches to the correct MCP tool.
+ * A lightweight tool class compatible with LangChain's StructuredTool interface.
+ * Used instead of importing DynamicStructuredTool from @langchain/core, which is
+ * blocked for n8n community nodes on n8n Cloud.
+ */
+class StructuredToolCompat {
+	name: string;
+	description: string;
+	schema: AnyZodObject;
+	returnDirect = false;
+	lc_namespace = ['langchain', 'tools'];
+
+	private _func: (input: Record<string, unknown>) => Promise<string>;
+
+	constructor(opts: {
+		name: string;
+		description: string;
+		schema: AnyZodObject;
+		func: (input: Record<string, unknown>) => Promise<string>;
+	}) {
+		this.name = opts.name;
+		this.description = opts.description;
+		this.schema = opts.schema;
+		this._func = opts.func;
+	}
+
+	async invoke(input: Record<string, unknown>): Promise<string> {
+		const parsed = this.schema.parse(input);
+		return await this._func(parsed as Record<string, unknown>);
+	}
+
+	async call(input: Record<string, unknown>): Promise<string> {
+		return await this.invoke(input);
+	}
+
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	async _call(input: Record<string, unknown>): Promise<string> {
+		return await this.invoke(input);
+	}
+}
+
+/**
+ * Create a single dispatch tool that routes to the correct MCP tool.
  * n8n v1.x expects exactly one tool per AiTool connection, so we create a single
  * dispatch tool that can call any of the available MCP tools by name.
  */
@@ -94,7 +134,7 @@ export function createMcpDispatchTool(
 		.map((t) => `- ${t.name}: ${t.description ?? 'No description'}`)
 		.join('\n');
 
-	return new DynamicStructuredTool({
+	return new StructuredToolCompat({
 		name: toolPackName,
 		description: `Execute tools from this Merge Tool Pack. Available tools:\n${toolDescriptions}\n\nSpecify the tool_name and provide its arguments.`,
 		schema: z.object({
@@ -104,9 +144,10 @@ export function createMcpDispatchTool(
 				.optional()
 				.describe('Arguments to pass to the tool as a JSON object'),
 		}),
-		func: async (input: { tool_name: string; arguments?: Record<string, unknown> }) => {
-			return await callFn(input.tool_name, input.arguments ?? {});
+		func: async (input: Record<string, unknown>) => {
+			const toolName = input.tool_name as string;
+			const args = (input.arguments as Record<string, unknown>) ?? {};
+			return await callFn(toolName, args);
 		},
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	} as any);
+	});
 }
