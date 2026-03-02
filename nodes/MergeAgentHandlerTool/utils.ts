@@ -78,16 +78,92 @@ export function jsonSchemaToZodObject(schema: McpToolInputSchema): AnyZodObject 
 }
 
 /**
- * A lightweight tool class compatible with LangChain's StructuredTool interface.
+ * Convert a Zod object schema to a JSON Schema representation.
+ * Handles the types used in our dispatch tool schema.
+ */
+function zodObjectToJsonSchema(zodSchema: AnyZodObject): Record<string, unknown> {
+	const shape = zodSchema.shape as Record<string, ZodTypeAny>;
+	const properties: Record<string, Record<string, unknown>> = {};
+	const required: string[] = [];
+
+	for (const [key, value] of Object.entries(shape)) {
+		let innerSchema = value;
+		let isOptional = false;
+
+		// Unwrap ZodOptional
+		if (innerSchema._def?.typeName === 'ZodOptional') {
+			isOptional = true;
+			innerSchema = innerSchema._def.innerType as ZodTypeAny;
+		}
+
+		const prop: Record<string, unknown> = {};
+		const description = innerSchema._def?.description as string | undefined;
+		if (description) {
+			prop.description = description;
+		}
+
+		const typeName = innerSchema._def?.typeName as string;
+		switch (typeName) {
+			case 'ZodString':
+				prop.type = 'string';
+				break;
+			case 'ZodNumber':
+				prop.type = 'number';
+				break;
+			case 'ZodBoolean':
+				prop.type = 'boolean';
+				break;
+			case 'ZodEnum':
+				prop.type = 'string';
+				prop.enum = innerSchema._def.values as string[];
+				break;
+			case 'ZodRecord':
+				prop.type = 'object';
+				prop.additionalProperties = true;
+				break;
+			case 'ZodArray':
+				prop.type = 'array';
+				break;
+			case 'ZodObject':
+				prop.type = 'object';
+				break;
+			default:
+				prop.type = 'object';
+				break;
+		}
+
+		properties[key] = prop;
+		if (!isOptional) {
+			required.push(key);
+		}
+	}
+
+	const jsonSchema: Record<string, unknown> = {
+		type: 'object',
+		properties,
+	};
+	if (required.length > 0) {
+		jsonSchema.required = required;
+	}
+	return jsonSchema;
+}
+
+/**
+ * A lightweight tool class compatible with LangChain's tool interfaces.
  * Used instead of importing DynamicStructuredTool from @langchain/core, which is
  * blocked for n8n community nodes on n8n Cloud.
+ *
+ * Has `input_schema` so LangChain's Anthropic adapter detects it via `isAnthropicTool`.
+ * Implements `toJSON()` to ensure only the three Anthropic-accepted fields
+ * (`name`, `description`, `input_schema`) are serialized, preventing rejection of
+ * extra properties (e.g. `metadata` added by n8n, or any others).
  */
 class StructuredToolCompat {
 	name: string;
 	description: string;
 	schema: AnyZodObject;
-	returnDirect = false;
-	lc_namespace = ['langchain', 'tools'];
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	input_schema: Record<string, unknown>;
 
 	private _func: (input: Record<string, unknown>) => Promise<string>;
 
@@ -100,7 +176,22 @@ class StructuredToolCompat {
 		this.name = opts.name;
 		this.description = opts.description;
 		this.schema = opts.schema;
+		this.input_schema = zodObjectToJsonSchema(opts.schema);
 		this._func = opts.func;
+	}
+
+	/**
+	 * Controls JSON serialization. When LangChain's Anthropic adapter detects this
+	 * tool via `isAnthropicTool` (has `input_schema`), it passes the object as-is
+	 * to the Anthropic SDK, which JSON-serializes it. This method ensures only the
+	 * fields Anthropic accepts are included, stripping `schema`, `metadata`, etc.
+	 */
+	toJSON(): { name: string; description: string; input_schema: Record<string, unknown> } {
+		return {
+			name: this.name,
+			description: this.description,
+			input_schema: this.input_schema,
+		};
 	}
 
 	async invoke(input: Record<string, unknown>): Promise<string> {
