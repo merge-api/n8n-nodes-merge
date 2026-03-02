@@ -7,7 +7,8 @@
 		"n8n-community-node-package"
 	],
 	"author": {
-		"name": "Merge"
+		"name": "Merge",
+		"email": "experience@merge.dev"
 	},
 	"repository": {
 		"type": "git",
@@ -45,11 +46,6 @@
 		"zod": "^3.22.0"
 	},
 	"peerDependencies": {
-		"n8n-workflow": "*",
-		"@langchain/core": ">=0.3.0",
-		"zod": ">=3.22.0"
-	},
-	"overrides": {
-		"change-case": "4.1.2"
+		"n8n-workflow": "*"
 	}
 }
