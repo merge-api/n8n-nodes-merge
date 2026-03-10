@@ -117,7 +117,7 @@ If a connector hasn't been authenticated yet for the selected registered user:
 
 ## Key Concepts
 
-**Tool Packs** are bundles of connectors that define which third-party integrations your AI agent can access. Each Tool Pack contains one or more connectors (e.g., Greenhouse, Salesforce, Jira) and exposes their capabilities as tools that can be called. You create and manage Tool Packs in the [Merge Agent Handler dashboard](https://ah.merge.dev/tool-packs).
+**Tool Packs** are bundles of connectors that define which third-party integrations your AI agent can access. Each Tool Pack contains one or more connectors (e.g., Greenhouse, Salesforce, Jira) and exposes their capabilities as tools that can be called. You can create and manage Tool Packs using the **Merge Agent Handler** node in n8n or in the [Merge Agent Handler dashboard](https://ah.merge.dev/tool-packs).
 
 ![Creating a Tool Pack in the Merge dashboard](docs/images/create-tool-pack.png)
 
@@ -129,7 +129,7 @@ If a connector hasn't been authenticated yet for the selected registered user:
 
 1. A [Merge Agent Handler](https://ah.merge.dev/) account
 2. An API key (Production or Test Access Key) from the Merge Agent Handler dashboard
-3. At least one [Tool Pack](https://ah.merge.dev/tool-packs) created with connectors configured
+3. At least one [Tool Pack](https://ah.merge.dev/tool-packs) created with connectors configured (can be created via the Merge Agent Handler node or the dashboard)
 4. At least one [Registered User](https://ah.merge.dev/registered-users) (can be created via the Merge Agent Handler node or the dashboard)
 
 ## Credentials
