@@ -4,3 +4,7 @@ dist/
 *.js.map
 *.tsbuildinfo
 .claude/
+tests/
+vitest.config.ts
+*.png
+agent-handler-partnerships-concerns.md

@@ -1,6 +1,6 @@
 import { NodeOperationError } from 'n8n-workflow';
 import type {
-	ISupplyDataFunctions,
+	IExecuteFunctions,
 	ILoadOptionsFunctions,
 	IHttpRequestOptions,
 } from 'n8n-workflow';
@@ -9,6 +9,7 @@ import type {
 	MergeToolPack,
 	MergeRegisteredUser,
 	McpTool,
+	McpToolResult,
 	McpJsonRpcRequest,
 	McpJsonRpcResponse,
 } from './types';
@@ -16,7 +17,7 @@ import type {
 const BASE_URL = 'https://ah-api.merge.dev/api/v1';
 
 async function makeAuthenticatedRequest(
-	ctx: ISupplyDataFunctions | ILoadOptionsFunctions,
+	ctx: IExecuteFunctions | ILoadOptionsFunctions,
 	options: IHttpRequestOptions,
 ) {
 	const credentials = await ctx.getCredentials('mergeAgentHandlerApi');
@@ -32,7 +33,7 @@ async function makeAuthenticatedRequest(
 }
 
 async function fetchAllPages<T>(
-	ctx: ISupplyDataFunctions | ILoadOptionsFunctions,
+	ctx: IExecuteFunctions | ILoadOptionsFunctions,
 	url: string,
 	qs?: Record<string, string>,
 ): Promise<T[]> {
@@ -59,13 +60,13 @@ async function fetchAllPages<T>(
 }
 
 export async function getToolPacks(
-	ctx: ISupplyDataFunctions | ILoadOptionsFunctions,
+	ctx: IExecuteFunctions | ILoadOptionsFunctions,
 ): Promise<MergeToolPack[]> {
 	return await fetchAllPages<MergeToolPack>(ctx, `${BASE_URL}/tool-packs/`);
 }
 
 export async function getRegisteredUsers(
-	ctx: ISupplyDataFunctions | ILoadOptionsFunctions,
+	ctx: IExecuteFunctions | ILoadOptionsFunctions,
 	isTest?: boolean,
 ): Promise<MergeRegisteredUser[]> {
 	const qs: Record<string, string> = {};
@@ -76,7 +77,7 @@ export async function getRegisteredUsers(
 }
 
 export async function listMcpTools(
-	ctx: ISupplyDataFunctions,
+	ctx: IExecuteFunctions | ILoadOptionsFunctions,
 	toolPackId: string,
 	registeredUserId: string,
 ): Promise<McpTool[]> {
@@ -112,12 +113,12 @@ export async function listMcpTools(
 }
 
 export async function callMcpTool(
-	ctx: ISupplyDataFunctions,
+	ctx: IExecuteFunctions,
 	toolPackId: string,
 	registeredUserId: string,
 	toolName: string,
 	args: Record<string, unknown>,
-): Promise<string> {
+): Promise<McpToolResult> {
 	const mcpUrl = `${BASE_URL}/tool-packs/${toolPackId}/registered-users/${registeredUserId}/mcp`;
 
 	const rpcRequest: McpJsonRpcRequest = {
@@ -143,26 +144,43 @@ export async function callMcpTool(
 			},
 		});
 	} catch (error) {
-		return `Error calling tool "${toolName}": ${(error as Error).message}`;
+		return { text: `Error calling tool "${toolName}": ${(error as Error).message}` };
 	}
 
 	if (response.error) {
-		return `Tool "${toolName}" returned error: ${response.error.message}`;
+		return { text: `Tool "${toolName}" returned error: ${response.error.message}` };
 	}
 
 	if (response.result?.isError) {
 		const errorText =
 			response.result.content?.map((c) => c.text).join('\n') ?? 'Unknown error';
-		return `Tool "${toolName}" failed: ${errorText}`;
+		return { text: `Tool "${toolName}" failed: ${errorText}` };
 	}
 
 	const content = response.result?.content;
+	let text: string;
 	if (Array.isArray(content)) {
-		return content
+		text = content
 			.filter((c) => c.type === 'text')
 			.map((c) => c.text)
 			.join('\n');
+	} else {
+		text = JSON.stringify(response.result);
 	}
 
-	return JSON.stringify(response.result);
+	// Detect magic link authentication responses
+	try {
+		const parsed = JSON.parse(text);
+		if (parsed && typeof parsed === 'object' && parsed.magic_link_url) {
+			return {
+				text: parsed.message ?? text,
+				magicLinkUrl: parsed.magic_link_url as string,
+				requiresAuth: true,
+			};
+		}
+	} catch {
+		// Not JSON — normal tool response
+	}
+
+	return { text };
 }

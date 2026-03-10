@@ -17,27 +17,48 @@ const dist = path.resolve(__dirname, '..', 'dist');
 fs.mkdirSync(path.join(dist, 'types'), { recursive: true });
 fs.mkdirSync(path.join(dist, 'known'), { recursive: true });
 
+// Copy SVG icons to dist (tsc only compiles .ts files)
+const nodeDirs = ['MergeAgentHandler', 'MergeAgentHandlerTools'];
+for (const dir of nodeDirs) {
+	const src = path.resolve(__dirname, '..', 'nodes', dir, 'merge.svg');
+	const dest = path.join(dist, 'nodes', dir, 'merge.svg');
+	if (fs.existsSync(src)) {
+		fs.copyFileSync(src, dest);
+	}
+}
+
 // Load compiled classes
-const { MergeAgentHandlerTool } = require(path.join(
+const { MergeAgentHandlerTools } = require(path.join(
 	dist,
-	'nodes/MergeAgentHandlerTool/MergeAgentHandlerTool.node.js',
+	'nodes/MergeAgentHandlerTools/MergeAgentHandlerTools.node.js',
+));
+const { MergeAgentHandler } = require(path.join(
+	dist,
+	'nodes/MergeAgentHandler/MergeAgentHandler.node.js',
 ));
 const { MergeAgentHandlerApi } = require(path.join(
 	dist,
 	'credentials/MergeAgentHandlerApi.credentials.js',
 ));
 
-const node = new MergeAgentHandlerTool();
+const toolsNode = new MergeAgentHandlerTools();
+const apiNode = new MergeAgentHandler();
 const cred = new MergeAgentHandlerApi();
 
 // ── dist/types/nodes.json ──
-const nodeDesc = { ...node.description };
-delete nodeDesc.icon;
-nodeDesc.iconUrl =
-	'icons/n8n-nodes-merge/dist/nodes/MergeAgentHandlerTool/merge.svg';
+const toolsDesc = { ...toolsNode.description };
+delete toolsDesc.icon;
+toolsDesc.iconUrl =
+	'icons/n8n-nodes-merge/dist/nodes/MergeAgentHandlerTools/merge.svg';
+
+const apiDesc = { ...apiNode.description };
+delete apiDesc.icon;
+apiDesc.iconUrl =
+	'icons/n8n-nodes-merge/dist/nodes/MergeAgentHandler/merge.svg';
+
 fs.writeFileSync(
 	path.join(dist, 'types/nodes.json'),
-	JSON.stringify([nodeDesc], null, '\t'),
+	JSON.stringify([toolsDesc, apiDesc], null, '\t'),
 );
 
 // ── dist/types/credentials.json ──
@@ -52,7 +73,7 @@ fs.writeFileSync(
 				properties: cred.properties,
 				authenticate: cred.authenticate,
 				test: cred.test,
-				supportedNodes: ['mergeAgentHandlerTool'],
+				supportedNodes: ['mergeAgentHandlerTools', 'mergeAgentHandler'],
 			},
 		],
 		null,
@@ -65,10 +86,15 @@ fs.writeFileSync(
 	path.join(dist, 'known/nodes.json'),
 	JSON.stringify(
 		{
-			mergeAgentHandlerTool: {
-				className: 'MergeAgentHandlerTool',
+			mergeAgentHandlerTools: {
+				className: 'MergeAgentHandlerTools',
 				sourcePath:
-					'dist/nodes/MergeAgentHandlerTool/MergeAgentHandlerTool.node.js',
+					'dist/nodes/MergeAgentHandlerTools/MergeAgentHandlerTools.node.js',
+			},
+			mergeAgentHandler: {
+				className: 'MergeAgentHandler',
+				sourcePath:
+					'dist/nodes/MergeAgentHandler/MergeAgentHandler.node.js',
 			},
 		},
 		null,
@@ -84,7 +110,7 @@ fs.writeFileSync(
 			mergeAgentHandlerApi: {
 				className: 'MergeAgentHandlerApi',
 				sourcePath: 'dist/credentials/MergeAgentHandlerApi.credentials.js',
-				supportedNodes: ['mergeAgentHandlerTool'],
+				supportedNodes: ['mergeAgentHandlerTools', 'mergeAgentHandler'],
 			},
 		},
 		null,

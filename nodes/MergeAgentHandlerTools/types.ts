@@ -46,6 +46,12 @@ export interface McpJsonRpcRequest {
 	params?: Record<string, unknown>;
 }
 
+export interface McpToolResult {
+	text: string;
+	magicLinkUrl?: string;
+	requiresAuth?: boolean;
+}
+
 export interface McpJsonRpcResponse {
 	jsonrpc: '2.0';
 	id: number;
