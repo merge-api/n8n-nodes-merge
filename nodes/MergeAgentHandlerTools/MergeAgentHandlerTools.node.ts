@@ -49,7 +49,7 @@ export class MergeAgentHandlerTools implements INodeType {
 				required: true,
 				default: '',
 				description:
-					'The Merge Tool Pack to connect to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+					'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getToolPacks',
 				},
@@ -75,7 +75,7 @@ export class MergeAgentHandlerTools implements INodeType {
 				required: true,
 				default: '',
 				description:
-					'The registered user to run tools as. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+					'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getRegisteredUsers',
 					loadOptionsDependsOn: ['environment'],
@@ -89,7 +89,7 @@ export class MergeAgentHandlerTools implements INodeType {
 				required: true,
 				default: '',
 				description:
-					'The MCP tool to execute. Choose from the list, or specify a name using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+					'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getToolNames',
 					loadOptionsDependsOn: ['toolPackId', 'registeredUserId'],

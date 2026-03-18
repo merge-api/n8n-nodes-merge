@@ -80,11 +80,11 @@ export class MergeAgentHandler implements INodeType {
 				default: 'create',
 				displayOptions: { show: { resource: ['registeredUser'] } },
 				options: [
-					{ name: 'Create', value: 'create', action: 'Create registered user' },
-					{ name: 'Delete', value: 'delete', action: 'Delete registered user' },
-					{ name: 'Get', value: 'get', action: 'Get registered user' },
-					{ name: 'List', value: 'list', action: 'List registered users' },
-					{ name: 'Update', value: 'update', action: 'Update registered user' },
+					{ name: 'Create', value: 'create', action: 'Create registered user', description: 'Create a new registered user' },
+					{ name: 'Delete', value: 'delete', action: 'Delete registered user', description: 'Delete a registered user permanently' },
+					{ name: 'Get', value: 'get', action: 'Get registered user', description: 'Retrieve a registered user' },
+					{ name: 'Get Many', value: 'getAll', action: 'Get many registered users', description: 'Retrieve a list of registered users' },
+					{ name: 'Update', value: 'update', action: 'Update registered user', description: 'Update a registered user' },
 				],
 			},
 
@@ -97,11 +97,11 @@ export class MergeAgentHandler implements INodeType {
 				default: 'create',
 				displayOptions: { show: { resource: ['toolPack'] } },
 				options: [
-					{ name: 'Create', value: 'create', action: 'Create tool pack' },
-					{ name: 'Delete', value: 'delete', action: 'Delete tool pack' },
-					{ name: 'Get', value: 'get', action: 'Get tool pack' },
-					{ name: 'List', value: 'list', action: 'List tool packs' },
-					{ name: 'Update', value: 'update', action: 'Update tool pack' },
+					{ name: 'Create', value: 'create', action: 'Create tool pack', description: 'Create a new tool pack' },
+					{ name: 'Delete', value: 'delete', action: 'Delete tool pack', description: 'Delete a tool pack permanently' },
+					{ name: 'Get', value: 'get', action: 'Get tool pack', description: 'Retrieve a tool pack' },
+					{ name: 'Get Many', value: 'getAll', action: 'Get many tool packs', description: 'Retrieve a list of tool packs' },
+					{ name: 'Update', value: 'update', action: 'Update tool pack', description: 'Update a tool pack' },
 				],
 			},
 
@@ -111,11 +111,11 @@ export class MergeAgentHandler implements INodeType {
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
-				default: 'list',
+				default: 'getAll',
 				displayOptions: { show: { resource: ['connector'] } },
 				options: [
-					{ name: 'Get', value: 'get', action: 'Get connector' },
-					{ name: 'List', value: 'list', action: 'List connectors' },
+					{ name: 'Get', value: 'get', action: 'Get connector', description: 'Retrieve a connector' },
+					{ name: 'Get Many', value: 'getAll', action: 'Get many connectors', description: 'Retrieve a list of connectors' },
 				],
 			},
 
@@ -128,7 +128,7 @@ export class MergeAgentHandler implements INodeType {
 				default: 'create',
 				displayOptions: { show: { resource: ['linkToken'] } },
 				options: [
-					{ name: 'Create', value: 'create', action: 'Generate link token' },
+					{ name: 'Create', value: 'create', action: 'Generate link token', description: 'Generate a link token for connector authentication' },
 				],
 			},
 
@@ -141,7 +141,7 @@ export class MergeAgentHandler implements INodeType {
 				default: 'delete',
 				displayOptions: { show: { resource: ['credential'] } },
 				options: [
-					{ name: 'Delete', value: 'delete', action: 'Delete credential' },
+					{ name: 'Delete', value: 'delete', action: 'Delete credential', description: 'Delete a credential permanently' },
 				],
 			},
 
@@ -151,10 +151,10 @@ export class MergeAgentHandler implements INodeType {
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
-				default: 'list',
+				default: 'getAll',
 				displayOptions: { show: { resource: ['auditLog'] } },
 				options: [
-					{ name: 'List', value: 'list', action: 'List audit log events' },
+					{ name: 'Get Many', value: 'getAll', action: 'Get many audit log events', description: 'Retrieve a list of audit log events' },
 				],
 			},
 
@@ -167,7 +167,7 @@ export class MergeAgentHandler implements INodeType {
 				default: 'search',
 				displayOptions: { show: { resource: ['toolSearch'] } },
 				options: [
-					{ name: 'Search', value: 'search', action: 'Search for tools' },
+					{ name: 'Search', value: 'search', action: 'Search for tools', description: 'Search for tools by intent' },
 				],
 			},
 
@@ -308,7 +308,7 @@ export class MergeAgentHandler implements INodeType {
 				default: false,
 				description: 'Whether to filter for test users only',
 				displayOptions: {
-					show: { resource: ['registeredUser'], operation: ['list'] },
+					show: { resource: ['registeredUser'], operation: ['getAll'] },
 				},
 			},
 
@@ -407,12 +407,12 @@ export class MergeAgentHandler implements INodeType {
 			// Connector fields
 			// ══════════════════════════════════════════
 			{
-				displayName: 'Connector Slug',
+				displayName: 'Connector Name or ID',
 				name: 'connectorSlug',
 				type: 'options',
 				required: true,
 				default: '',
-				description: 'Choose from the list, or specify a slug using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getConnectors',
 				},
@@ -439,12 +439,12 @@ export class MergeAgentHandler implements INodeType {
 				},
 			},
 			{
-				displayName: 'Connector',
+				displayName: 'Connector Name or ID',
 				name: 'linkTokenConnector',
 				type: 'options',
 				required: true,
 				default: '',
-				description: 'Connector slug to generate a link token for',
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getConnectors',
 				},
@@ -471,12 +471,12 @@ export class MergeAgentHandler implements INodeType {
 				},
 			},
 			{
-				displayName: 'Connector Slug',
+				displayName: 'Connector Name or ID',
 				name: 'credentialConnectorSlug',
 				type: 'options',
 				required: true,
 				default: '',
-				description: 'Connector to delete credentials for',
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getConnectors',
 				},
@@ -495,7 +495,7 @@ export class MergeAgentHandler implements INodeType {
 				placeholder: 'Add Filter',
 				default: {},
 				displayOptions: {
-					show: { resource: ['auditLog'], operation: ['list'] },
+					show: { resource: ['auditLog'], operation: ['getAll'] },
 				},
 				options: [
 					{
@@ -553,7 +553,7 @@ export class MergeAgentHandler implements INodeType {
 				description: 'Whether to return all results or only up to a given limit',
 				displayOptions: {
 					show: {
-						operation: ['list'],
+						operation: ['getAll'],
 						resource: ['registeredUser', 'toolPack', 'connector', 'auditLog'],
 					},
 				},
@@ -567,7 +567,7 @@ export class MergeAgentHandler implements INodeType {
 				typeOptions: { minValue: 1 },
 				displayOptions: {
 					show: {
-						operation: ['list'],
+						operation: ['getAll'],
 						resource: ['registeredUser', 'toolPack', 'connector', 'auditLog'],
 						returnAll: [false],
 					},
@@ -733,7 +733,7 @@ export class MergeAgentHandler implements INodeType {
 						const id = this.getNodeParameter('registeredUserId', i) as string;
 						const result = await getRegisteredUser(this, id);
 						returnData.push({ json: result as any, pairedItem: { item: i } });
-					} else if (operation === 'list') {
+					} else if (operation === 'getAll') {
 						const isTest = this.getNodeParameter('isTest', i) as boolean;
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						let users = await listRegisteredUsers(this, isTest || undefined);
@@ -798,7 +798,7 @@ export class MergeAgentHandler implements INodeType {
 						const id = this.getNodeParameter('toolPackId', i) as string;
 						const result = await getToolPack(this, id);
 						returnData.push({ json: result as any, pairedItem: { item: i } });
-					} else if (operation === 'list') {
+					} else if (operation === 'getAll') {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						let packs = await listToolPacks(this);
 						if (!returnAll) {
@@ -845,7 +845,7 @@ export class MergeAgentHandler implements INodeType {
 						const slug = this.getNodeParameter('connectorSlug', i) as string;
 						const result = await getConnector(this, slug);
 						returnData.push({ json: result as any, pairedItem: { item: i } });
-					} else if (operation === 'list') {
+					} else if (operation === 'getAll') {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						let connectors = await listConnectors(this);
 						if (!returnAll) {
@@ -871,7 +871,7 @@ export class MergeAgentHandler implements INodeType {
 						returnData.push({ json: { deleted: true }, pairedItem: { item: i } });
 					}
 				} else if (resource === 'auditLog') {
-					if (operation === 'list') {
+					if (operation === 'getAll') {
 						const filters = this.getNodeParameter('auditLogFilters', i) as {
 							createdAfter?: string;
 							createdBefore?: string;
