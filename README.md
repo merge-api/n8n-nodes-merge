@@ -89,7 +89,9 @@ Connect the MCP node to an AI Agent node's **Tool** input. The agent automatical
 
 ![Merge Agent Handler MCP connected to an AI Agent](docs/images/connect-node.png)
 
-When a connector requires authentication, the agent will automatically call the corresponding `authenticate_*` tool and return a magic link URL. The user clicks the link to complete OAuth, and subsequent tool calls will work with the authenticated connection.
+The agent uses the Merge Search Tools API to discover relevant tools based on natural-language intent. On the first call, it receives a list of up to 20 matching tools and selects the best one. On the second call, it executes the selected tool directly.
+
+When a connector requires authentication, the `authenticate_*` tools appear in the search results. The agent calls the authenticate tool and returns a magic link URL. The user clicks the link to complete OAuth, and subsequent tool calls work with the authenticated connection.
 
 #### Mode 2: Standalone
 

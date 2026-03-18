@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-merge.mergeAgentHandlerTools",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["AI"],
+	"subcategories": {
+		"AI": ["Tools"],
+		"Tools": ["Other Tools"]
+	},
+	"alias": ["merge", "agent handler", "tool pack", "mcp"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://docs.ah.merge.dev/Overview/Agent-Handler-intro"
+			}
+		]
+	}
+}

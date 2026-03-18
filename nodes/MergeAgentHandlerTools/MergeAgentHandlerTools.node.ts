@@ -14,55 +14,10 @@ import {
 	callMcpTool,
 	getToolPacks,
 	getRegisteredUsers,
+	searchToolsByIntent,
 } from './mcpClient';
 
 import type { McpTool } from './types';
-
-/**
- * Find the best matching MCP tool for the agent's requested name.
- * Tries exact match, case-insensitive, then keyword overlap scoring.
- */
-export function findBestToolMatch(query: string, tools: McpTool[]): McpTool | undefined {
-	if (!query || tools.length === 0) return undefined;
-
-	// Exact match
-	const exact = tools.find((t) => t.name === query);
-	if (exact) return exact;
-
-	// Case-insensitive exact match
-	const lower = query.toLowerCase();
-	const ci = tools.find((t) => t.name.toLowerCase() === lower);
-	if (ci) return ci;
-
-	// Normalize: replace underscores/hyphens with spaces, lowercase
-	const normalize = (s: string) => s.toLowerCase().replace(/[_\-]+/g, ' ');
-	const queryNorm = normalize(query);
-	const queryWords = queryNorm.split(/\s+/).filter((w) => w.length > 1);
-
-	let bestScore = 0;
-	let bestTool: McpTool | undefined;
-
-	for (const tool of tools) {
-		const nameNorm = normalize(tool.name);
-		const descNorm = normalize(tool.description ?? '');
-		const combined = `${nameNorm} ${descNorm}`;
-
-		let score = 0;
-		for (const word of queryWords) {
-			if (combined.includes(word)) score++;
-		}
-
-		// Bonus for substring match in the tool name
-		if (nameNorm.includes(queryNorm)) score += queryWords.length * 2;
-
-		if (score > bestScore) {
-			bestScore = score;
-			bestTool = tool;
-		}
-	}
-
-	return bestScore > 0 ? bestTool : undefined;
-}
 
 export class MergeAgentHandlerTools implements INodeType {
 	description: INodeTypeDescription = {
@@ -71,26 +26,12 @@ export class MergeAgentHandlerTools implements INodeType {
 		icon: 'file:merge.svg',
 		group: ['transform'],
 		version: 1,
+		subtitle: '={{$parameter["toolName"] || $parameter["toolNameAgent"] || "MCP Tool"}}',
 		description: 'Connect to a Merge Agent Handler Tool Pack and call MCP tools',
 		defaults: {
 			name: 'Merge Agent Handler MCP',
 		},
 		usableAsTool: true,
-		codex: {
-			categories: ['AI'],
-			subcategories: {
-				AI: ['Tools'],
-				Tools: ['Other Tools'],
-			},
-			alias: ['merge', 'agent handler', 'tool pack', 'mcp'],
-			resources: {
-				primaryDocumentation: [
-					{
-						url: 'https://docs.ah.merge.dev/Overview/Agent-Handler-intro',
-					},
-				],
-			},
-		},
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [
@@ -108,7 +49,7 @@ export class MergeAgentHandlerTools implements INodeType {
 				required: true,
 				default: '',
 				description:
-					'The Merge Tool Pack to connect to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+					'The Merge Tool Pack to connect to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getToolPacks',
 				},
@@ -119,7 +60,7 @@ export class MergeAgentHandlerTools implements INodeType {
 				name: 'environment',
 				type: 'options',
 				default: 'production',
-				description: 'Whether to use test or production registered users',
+				description: 'Use test or production registered users',
 				options: [
 					{ name: 'Production', value: 'production' },
 					{ name: 'Test', value: 'test' },
@@ -134,7 +75,7 @@ export class MergeAgentHandlerTools implements INodeType {
 				required: true,
 				default: '',
 				description:
-					'The registered user to run tools as. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+					'The registered user to run tools as. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getRegisteredUsers',
 					loadOptionsDependsOn: ['environment'],
@@ -148,7 +89,7 @@ export class MergeAgentHandlerTools implements INodeType {
 				required: true,
 				default: '',
 				description:
-					'The MCP tool to execute. Choose from the list, or specify a name using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+					'The MCP tool to execute. Choose from the list, or specify a name using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				typeOptions: {
 					loadOptionsMethod: 'getToolNames',
 					loadOptionsDependsOn: ['toolPackId', 'registeredUserId'],
@@ -185,12 +126,12 @@ export class MergeAgentHandlerTools implements INodeType {
 
 			// ── Tool Name (agent mode — free text, filled by agent) ──
 			{
-				displayName: 'Tool Name',
+				displayName: 'Tool Name or Intent',
 				name: 'toolNameAgent',
 				type: 'string',
 				default: '',
 				description:
-					'The MCP tool name to call. Leave empty to auto-discover available tools.',
+					'The MCP tool name or a natural-language description of what you want to do',
 				displayOptions: {
 					show: { '@tool': [true] },
 				},
@@ -296,145 +237,170 @@ export class MergeAgentHandlerTools implements INodeType {
 		const returnData: INodeExecutionData[] = [];
 
 		for (let i = 0; i < items.length; i++) {
-			const toolPackId = this.getNodeParameter('toolPackId', i) as string;
-			const registeredUserId = this.getNodeParameter(
-				'registeredUserId',
-				i,
-			) as string;
-
-			if (!toolPackId || !registeredUserId) {
-				throw new NodeOperationError(
-					this.getNode(),
-					'Tool Pack and Registered User must be specified',
-					{ itemIndex: i },
-				);
-			}
-
-			// Read tool name — check agent param first (freshest value),
-			// fall back to standalone dropdown
-			let agentToolName = '';
 			try {
-				agentToolName = this.getNodeParameter(
-					'toolNameAgent',
+				const toolPackId = this.getNodeParameter('toolPackId', i) as string;
+				const registeredUserId = this.getNodeParameter(
+					'registeredUserId',
 					i,
-					'',
 				) as string;
-			} catch {
-				// hidden in standalone mode
-			}
-			let toolName = '';
-			if (!agentToolName) {
-				try {
-					toolName = this.getNodeParameter(
-						'toolName',
-						i,
-						'',
-					) as string;
-				} catch {
-					// hidden in agent mode
-				}
-			}
 
-			// Read arguments — check agent param first, fall back to standalone
-			let toolArgumentsRaw: unknown = '{}';
-			try {
-				const agentArgs = this.getNodeParameter(
-					'toolArgumentsAgent',
-					i,
-					'',
-				) as string;
-				if (agentArgs && agentArgs !== '{}') {
-					toolArgumentsRaw = agentArgs;
-				}
-			} catch {
-				// hidden in standalone mode
-			}
-			if (toolArgumentsRaw === '{}') {
-				try {
-					toolArgumentsRaw = this.getNodeParameter(
-						'toolArguments',
-						i,
-						'{}',
+				if (!toolPackId || !registeredUserId) {
+					throw new NodeOperationError(
+						this.getNode(),
+						'Tool Pack and Registered User must be specified',
+						{ itemIndex: i },
 					);
-				} catch {
-					// hidden in agent mode
 				}
-			}
 
-			// Agent mode: fuzzy-match the agent's tool name against actual MCP tools
-			if (!toolName && agentToolName) {
-				const tools = await listMcpTools(
-					this,
-					toolPackId,
-					registeredUserId,
-				);
-				const matched = findBestToolMatch(agentToolName, tools);
-				if (matched) {
-					toolName = matched.name;
-				} else {
-					const available = tools
-						.map((t) => t.name)
-						.join(', ');
+				// Track fetched tools to avoid redundant API calls
+				let allTools: McpTool[] | undefined;
+
+				// Read tool name — check agent param first, fall back to standalone dropdown
+				let agentToolName = '';
+				try {
+					agentToolName = this.getNodeParameter('toolNameAgent', i, '') as string;
+				} catch {
+					// hidden in standalone mode
+				}
+				let toolName = '';
+				if (!agentToolName) {
+					try {
+						toolName = this.getNodeParameter('toolName', i, '') as string;
+					} catch {
+						// hidden in agent mode
+					}
+				}
+
+				// Read arguments — check agent param first, fall back to standalone
+				let toolArgumentsRaw: unknown = '{}';
+				try {
+					const agentArgs = this.getNodeParameter('toolArgumentsAgent', i, '') as string;
+					if (agentArgs && agentArgs !== '{}') {
+						toolArgumentsRaw = agentArgs;
+					}
+				} catch {
+					// hidden in standalone mode
+				}
+				if (toolArgumentsRaw === '{}') {
+					try {
+						toolArgumentsRaw = this.getNodeParameter('toolArguments', i, '{}');
+					} catch {
+						// hidden in agent mode
+					}
+				}
+
+				// ── Agent mode: resolve tool ──
+				if (!toolName && agentToolName) {
+					if (!allTools) {
+						allTools = await listMcpTools(this, toolPackId, registeredUserId);
+					}
+					const intentLower = agentToolName.toLowerCase();
+
+					// 1) Exact match: agent sent back an exact tool name from a previous search
+					const exactMatch = allTools.find(
+						(t) => t.name === agentToolName || t.name.toLowerCase() === intentLower,
+					);
+					if (exactMatch) {
+						toolName = exactMatch.name;
+					} else {
+						// 2) Search API: return up to 20 candidates for the agent to pick from
+						let searchResults: Array<{ name: string; fully_qualified_name: string; description?: string; relevance_score?: number }>;
+						try {
+							searchResults = await searchToolsByIntent(
+								this, toolPackId, registeredUserId, agentToolName,
+							);
+						} catch (searchError) {
+							throw new NodeOperationError(
+								this.getNode(),
+								`Tool search failed: ${(searchError as Error).message}`,
+								{ itemIndex: i },
+							);
+						}
+
+						if (searchResults.length > 0) {
+							const toolList = searchResults
+								.map((t) => `- ${t.fully_qualified_name}: ${t.description ?? 'No description'}`)
+								.join('\n');
+							returnData.push({
+								json: {
+									result: `Found ${searchResults.length} tools matching "${agentToolName}". Pick the most relevant fully_qualified_name and call this tool again with that exact name as toolNameAgent:\n${toolList}`,
+								},
+								pairedItem: { item: i },
+							});
+						} else {
+							const available = allTools
+								.map((t) => t.name)
+								.join(', ');
+							returnData.push({
+								json: {
+									result: `No tools found via search for "${agentToolName}". Available tools: ${available}`,
+								},
+								pairedItem: { item: i },
+							});
+						}
+						continue;
+					}
+				}
+
+				// No tool name at all: list available tools for discovery
+				if (!toolName) {
+					if (!allTools) {
+						allTools = await listMcpTools(this, toolPackId, registeredUserId);
+					}
+					const toolList = allTools
+						.map((t) => `- ${t.name}: ${t.description ?? 'No description'}`)
+						.join('\n');
 					returnData.push({
 						json: {
-							result: `No tool matching "${agentToolName}" found. Available tools: ${available}`,
+							result: `Available MCP tools in this Tool Pack:\n${toolList}\n\nCall this tool again with toolNameAgent set to one of the above tool names and toolArgumentsAgent set to a JSON object of arguments.`,
 						},
+						pairedItem: { item: i },
 					});
 					continue;
 				}
-			}
 
-			// No tool name at all: list available tools for discovery
-			if (!toolName) {
-				const tools = await listMcpTools(
+				// Parse arguments
+				let args: Record<string, unknown>;
+				try {
+					args =
+						typeof toolArgumentsRaw === 'string'
+							? JSON.parse(toolArgumentsRaw)
+							: (toolArgumentsRaw as Record<string, unknown>);
+				} catch {
+					throw new NodeOperationError(
+						this.getNode(),
+						'Invalid JSON in Arguments field',
+						{ itemIndex: i },
+					);
+				}
+
+				// Execute the tool
+				const mcpResult = await callMcpTool(
 					this,
 					toolPackId,
 					registeredUserId,
+					toolName,
+					args,
 				);
-				const toolList = tools
-					.map(
-						(t) =>
-							`- ${t.name}: ${t.description ?? 'No description'}`,
-					)
-					.join('\n');
-				returnData.push({
-					json: {
-						result: `Available MCP tools in this Tool Pack:\n${toolList}\n\nCall this tool again with toolNameAgent set to one of the above tool names and toolArgumentsAgent set to a JSON object of arguments.`,
-					},
-				});
-				continue;
-			}
 
-			let args: Record<string, unknown>;
-			try {
-				args =
-					typeof toolArgumentsRaw === 'string'
-						? JSON.parse(toolArgumentsRaw)
-						: (toolArgumentsRaw as Record<string, unknown>);
-			} catch {
-				throw new NodeOperationError(
-					this.getNode(),
-					'Invalid JSON in Arguments field',
-					{ itemIndex: i },
-				);
+				const output: { result: string; magic_link_url?: string; requires_auth?: boolean } = {
+					result: mcpResult.text,
+				};
+				if (mcpResult.magicLinkUrl) {
+					output.magic_link_url = mcpResult.magicLinkUrl;
+					output.requires_auth = true;
+				}
+				returnData.push({ json: output, pairedItem: { item: i } });
+			} catch (error) {
+				if (this.continueOnFail()) {
+					returnData.push({
+						json: { error: (error as Error).message },
+						pairedItem: { item: i },
+					});
+					continue;
+				}
+				throw error;
 			}
-
-			const mcpResult = await callMcpTool(
-				this,
-				toolPackId,
-				registeredUserId,
-				toolName,
-				args,
-			);
-
-			const output: { result: string; magic_link_url?: string; requires_auth?: boolean } = {
-				result: mcpResult.text,
-			};
-			if (mcpResult.magicLinkUrl) {
-				output.magic_link_url = mcpResult.magicLinkUrl;
-				output.requires_auth = true;
-			}
-			returnData.push({ json: output });
 		}
 
 		return [returnData];

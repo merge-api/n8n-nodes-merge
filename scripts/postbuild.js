@@ -17,13 +17,18 @@ const dist = path.resolve(__dirname, '..', 'dist');
 fs.mkdirSync(path.join(dist, 'types'), { recursive: true });
 fs.mkdirSync(path.join(dist, 'known'), { recursive: true });
 
-// Copy SVG icons to dist (tsc only compiles .ts files)
+// Copy SVG icons and codex .node.json files to dist (tsc only compiles .ts files)
 const nodeDirs = ['MergeAgentHandler', 'MergeAgentHandlerTools'];
 for (const dir of nodeDirs) {
-	const src = path.resolve(__dirname, '..', 'nodes', dir, 'merge.svg');
-	const dest = path.join(dist, 'nodes', dir, 'merge.svg');
-	if (fs.existsSync(src)) {
-		fs.copyFileSync(src, dest);
+	const srcDir = path.resolve(__dirname, '..', 'nodes', dir);
+	const destDir = path.join(dist, 'nodes', dir);
+	const svg = path.join(srcDir, 'merge.svg');
+	if (fs.existsSync(svg)) {
+		fs.copyFileSync(svg, path.join(destDir, 'merge.svg'));
+	}
+	const jsonFiles = fs.readdirSync(srcDir).filter(f => f.endsWith('.node.json'));
+	for (const jsonFile of jsonFiles) {
+		fs.copyFileSync(path.join(srcDir, jsonFile), path.join(destDir, jsonFile));
 	}
 }
 

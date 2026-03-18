@@ -144,17 +144,17 @@ export async function callMcpTool(
 			},
 		});
 	} catch (error) {
-		return { text: `Error calling tool "${toolName}": ${(error as Error).message}` };
+		return { text: `Error calling tool "${toolName}": ${(error as Error).message}`, isError: true };
 	}
 
 	if (response.error) {
-		return { text: `Tool "${toolName}" returned error: ${response.error.message}` };
+		return { text: `Tool "${toolName}" returned error: ${response.error.message}`, isError: true };
 	}
 
 	if (response.result?.isError) {
 		const errorText =
 			response.result.content?.map((c) => c.text).join('\n') ?? 'Unknown error';
-		return { text: `Tool "${toolName}" failed: ${errorText}` };
+		return { text: `Tool "${toolName}" failed: ${errorText}`, isError: true };
 	}
 
 	const content = response.result?.content;
@@ -183,4 +183,20 @@ export async function callMcpTool(
 	}
 
 	return { text };
+}
+
+export async function searchToolsByIntent(
+	ctx: IExecuteFunctions,
+	toolPackId: string,
+	registeredUserId: string,
+	intent: string,
+): Promise<Array<{ name: string; fully_qualified_name: string; description?: string; relevance_score?: number }>> {
+	const response = await makeAuthenticatedRequest(ctx, {
+		method: 'POST',
+		url: `${BASE_URL}/tool-packs/${toolPackId}/registered-users/${registeredUserId}/search`,
+		body: { intent, max_results: 20 },
+		json: true,
+		headers: { 'Content-Type': 'application/json' },
+	});
+	return (response.tools ?? []) as Array<{ name: string; fully_qualified_name: string; description?: string; relevance_score?: number }>;
 }

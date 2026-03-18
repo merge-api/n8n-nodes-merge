@@ -50,6 +50,7 @@ export interface McpToolResult {
 	text: string;
 	magicLinkUrl?: string;
 	requiresAuth?: boolean;
+	isError?: boolean;
 }
 
 export interface McpJsonRpcResponse {
