@@ -15,7 +15,7 @@
 		"url": "https://github.com/merge-api/n8n-nodes-merge.git"
 	},
 	"scripts": {
-		"build": "n8n-node build && node scripts/postbuild.js",
+		"build": "tsc && node scripts/postbuild.js",
 		"build:watch": "tsc --watch",
 		"dev": "n8n-node dev",
 		"lint": "n8n-node lint",
