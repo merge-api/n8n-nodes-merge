@@ -2,7 +2,7 @@
 	"node": "n8n-nodes-merge.mergeAgentHandlerTools",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": ["AI"],
+	"categories": ["Development", "Developer Tools"],
 	"alias": ["merge", "agent handler", "tool pack", "mcp"],
 	"resources": {
 		"primaryDocumentation": [

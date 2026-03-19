@@ -2,7 +2,7 @@
 	"node": "n8n-nodes-merge.mergeAgentHandler",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": ["Miscellaneous"],
+	"categories": ["Development", "Developer Tools"],
 	"alias": ["merge", "agent handler", "registered user", "tool pack", "connector"],
 	"resources": {
 		"primaryDocumentation": [
