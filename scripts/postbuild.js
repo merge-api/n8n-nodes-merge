@@ -22,9 +22,11 @@ const nodeDirs = ['MergeAgentHandler', 'MergeAgentHandlerTools'];
 for (const dir of nodeDirs) {
 	const srcDir = path.resolve(__dirname, '..', 'nodes', dir);
 	const destDir = path.join(dist, 'nodes', dir);
-	const svg = path.join(srcDir, 'merge.svg');
-	if (fs.existsSync(svg)) {
-		fs.copyFileSync(svg, path.join(destDir, 'merge.svg'));
+	for (const svgName of ['merge.svg', 'merge-dark.svg']) {
+		const svg = path.join(srcDir, svgName);
+		if (fs.existsSync(svg)) {
+			fs.copyFileSync(svg, path.join(destDir, svgName));
+		}
 	}
 	const jsonFiles = fs.readdirSync(srcDir).filter(f => f.endsWith('.node.json'));
 	for (const jsonFile of jsonFiles) {
@@ -50,16 +52,39 @@ const toolsNode = new MergeAgentHandlerTools();
 const apiNode = new MergeAgentHandler();
 const cred = new MergeAgentHandlerApi();
 
+// ── helpers ──
+function applyThemedIconUrl(desc, nodeDir) {
+	const icon = desc.icon;
+	delete desc.icon;
+	if (icon && typeof icon === 'object' && icon.light) {
+		desc.iconUrl = {
+			light: `icons/n8n-nodes-merge/dist/nodes/${nodeDir}/merge.svg`,
+			dark: `icons/n8n-nodes-merge/dist/nodes/${nodeDir}/merge-dark.svg`,
+		};
+	} else {
+		desc.iconUrl = `icons/n8n-nodes-merge/dist/nodes/${nodeDir}/merge.svg`;
+	}
+}
+
+function loadCodex(nodeDir) {
+	const codexPath = path.resolve(__dirname, '..', 'nodes', nodeDir, `${nodeDir}.node.json`);
+	const raw = JSON.parse(fs.readFileSync(codexPath, 'utf8'));
+	const codex = {};
+	if (raw.categories) codex.categories = [...raw.categories, 'Custom Nodes'];
+	if (raw.subcategories) codex.subcategories = raw.subcategories;
+	if (raw.alias) codex.alias = raw.alias;
+	if (raw.resources) codex.resources = raw.resources;
+	return codex;
+}
+
 // ── dist/types/nodes.json ──
 const toolsDesc = { ...toolsNode.description };
-delete toolsDesc.icon;
-toolsDesc.iconUrl =
-	'icons/n8n-nodes-merge/dist/nodes/MergeAgentHandlerTools/merge.svg';
+applyThemedIconUrl(toolsDesc, 'MergeAgentHandlerTools');
+toolsDesc.codex = loadCodex('MergeAgentHandlerTools');
 
 const apiDesc = { ...apiNode.description };
-delete apiDesc.icon;
-apiDesc.iconUrl =
-	'icons/n8n-nodes-merge/dist/nodes/MergeAgentHandler/merge.svg';
+applyThemedIconUrl(apiDesc, 'MergeAgentHandler');
+apiDesc.codex = loadCodex('MergeAgentHandler');
 
 fs.writeFileSync(
 	path.join(dist, 'types/nodes.json'),

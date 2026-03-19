@@ -34,7 +34,7 @@ export class MergeAgentHandler implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Merge Agent Handler',
 		name: 'mergeAgentHandler',
-		icon: 'file:merge.svg',
+		icon: { light: 'file:merge.svg', dark: 'file:merge-dark.svg' },
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',

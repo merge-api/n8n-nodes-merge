@@ -23,7 +23,7 @@ export class MergeAgentHandlerTools implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Merge Agent Handler MCP',
 		name: 'mergeAgentHandlerTools',
-		icon: 'file:merge.svg',
+		icon: { light: 'file:merge.svg', dark: 'file:merge-dark.svg' },
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["toolName"] || $parameter["toolNameAgent"] || "MCP Tool"}}',
