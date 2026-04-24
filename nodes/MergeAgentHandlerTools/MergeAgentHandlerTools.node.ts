@@ -124,12 +124,16 @@ export class MergeAgentHandlerTools implements INodeType {
 				},
 			},
 
-			// ── Tool Name (agent mode — free text, filled by agent) ──
+			// ── Tool Name (agent mode — filled by agent via $fromAI) ──
+			// $fromAI marks this as an AI-fillable input. n8n's
+			// create-node-as-tool scans parameter values for $fromAI calls
+			// and builds the tool schema from those. Params without $fromAI
+			// (toolPackId, environment, registeredUserId) stay fixed from UI.
 			{
 				displayName: 'Tool Name or Intent',
 				name: 'toolNameAgent',
 				type: 'string',
-				default: '',
+				default: '={{ $fromAI("toolName", "The MCP tool name to call, or a natural-language description of what you want to do", "string") }}',
 				description:
 					'The MCP tool name or a natural-language description of what you want to do',
 				displayOptions: {
@@ -137,12 +141,12 @@ export class MergeAgentHandlerTools implements INodeType {
 				},
 			},
 
-			// ── Arguments (agent mode — free text, filled by agent) ──
+			// ── Arguments (agent mode — filled by agent via $fromAI) ──
 			{
 				displayName: 'Arguments (JSON)',
 				name: 'toolArgumentsAgent',
 				type: 'string',
-				default: '{}',
+				default: '={{ $fromAI("toolArguments", "JSON object of arguments to pass to the selected MCP tool", "string") }}',
 				description: 'JSON object of arguments to pass to the tool',
 				displayOptions: {
 					show: { '@tool': [true] },

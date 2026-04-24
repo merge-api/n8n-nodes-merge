@@ -23,13 +23,26 @@ async function makeAuthenticatedRequest(
 	const credentials = await ctx.getCredentials('mergeAgentHandlerApi');
 	const apiKey = credentials.apiKey as string;
 
-	return await ctx.helpers.httpRequest({
-		...options,
-		headers: {
-			...options.headers,
-			Authorization: `Bearer ${apiKey}`,
-		},
-	});
+	try {
+		return await ctx.helpers.httpRequest({
+			...options,
+			headers: {
+				...options.headers,
+				Authorization: `Bearer ${apiKey}`,
+			},
+		});
+	} catch (error: any) {
+		const method = options.method ?? 'GET';
+		const url = options.url;
+		const status =
+			error?.httpCode ?? error?.response?.status ?? error?.cause?.response?.status;
+		const respBody = error?.response?.data ?? error?.cause?.response?.data;
+		const bodyStr = respBody
+			? ` — ${typeof respBody === 'string' ? respBody : JSON.stringify(respBody).slice(0, 500)}`
+			: '';
+		const msg = `Merge API ${status ? `${status} error` : 'request failed'}: ${method} ${url}${bodyStr}`;
+		throw new NodeOperationError(ctx.getNode(), msg);
+	}
 }
 
 async function fetchAllPages<T>(
