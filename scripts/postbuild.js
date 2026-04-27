@@ -34,6 +34,17 @@ for (const dir of nodeDirs) {
 	}
 }
 
+// Copy credential SVG icons to dist/credentials
+const credSrcDir = path.resolve(__dirname, '..', 'credentials');
+const credDestDir = path.join(dist, 'credentials');
+fs.mkdirSync(credDestDir, { recursive: true });
+for (const svgName of ['merge.svg', 'merge-dark.svg']) {
+	const svg = path.join(credSrcDir, svgName);
+	if (fs.existsSync(svg)) {
+		fs.copyFileSync(svg, path.join(credDestDir, svgName));
+	}
+}
+
 // Load compiled classes
 const { MergeAgentHandlerTools } = require(path.join(
 	dist,

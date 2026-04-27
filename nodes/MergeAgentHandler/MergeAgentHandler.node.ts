@@ -1,6 +1,7 @@
 import {
 	NodeConnectionTypes,
 	NodeOperationError,
+	type IDataObject,
 	type IExecuteFunctions,
 	type ILoadOptionsFunctions,
 	type INodeExecutionData,
@@ -28,7 +29,11 @@ import {
 	searchTools,
 } from './apiClient';
 
-import type { ToolPackConnectorWrite } from './types';
+import type {
+	RegisteredUserRequest,
+	ToolPackConnectorWrite,
+	ToolPackRequest,
+} from './types';
 
 export class MergeAgentHandler implements INodeType {
 	description: INodeTypeDescription = {
@@ -364,7 +369,7 @@ export class MergeAgentHandler implements INodeType {
 				type: 'json',
 				required: true,
 				default: '[\n  {\n    "connector_id": "",\n    "auth_scope": "INDIVIDUAL",\n    "tool_names": []\n  }\n]',
-				description: 'JSON array of connector configurations. Each object needs: connector_id (required), auth_scope (INDIVIDUAL/SHARED/ORGANIZATION), tool_names (array of tool name strings)',
+				description: 'JSON array of connector configurations. Each object needs: connector_id (required), auth_scope (INDIVIDUAL/SHARED/ORGANIZATION), tool_names (array of tool name strings).',
 				displayOptions: {
 					show: { resource: ['toolPack'], operation: ['create'] },
 				},
@@ -516,7 +521,7 @@ export class MergeAgentHandler implements INodeType {
 						displayName: 'Event Type',
 						name: 'eventType',
 						type: 'options',
-						default: '',
+						default: 'CONNECTOR_DELETED',
 						options: [
 							{ name: 'Connector Deleted', value: 'CONNECTOR_DELETED' },
 							{ name: 'Connector Imported', value: 'CONNECTOR_IMPORTED' },
@@ -644,6 +649,7 @@ export class MergeAgentHandler implements INodeType {
 				],
 			},
 		],
+		usableAsTool: true,
 	};
 
 	methods = {
@@ -727,12 +733,12 @@ export class MergeAgentHandler implements INodeType {
 							};
 						}
 
-						const result = await createRegisteredUser(this, body as any);
-						returnData.push({ json: result as any, pairedItem: { item: i } });
+						const result = await createRegisteredUser(this, body as unknown as RegisteredUserRequest);
+						returnData.push({ json: result as unknown as IDataObject, pairedItem: { item: i } });
 					} else if (operation === 'get') {
 						const id = this.getNodeParameter('registeredUserId', i) as string;
 						const result = await getRegisteredUser(this, id);
-						returnData.push({ json: result as any, pairedItem: { item: i } });
+						returnData.push({ json: result as unknown as IDataObject, pairedItem: { item: i } });
 					} else if (operation === 'getAll') {
 						const isTest = this.getNodeParameter('isTest', i) as boolean;
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
@@ -742,7 +748,7 @@ export class MergeAgentHandler implements INodeType {
 							users = users.slice(0, limit);
 						}
 						for (const u of users) {
-							returnData.push({ json: u as any, pairedItem: { item: i } });
+							returnData.push({ json: u as unknown as IDataObject, pairedItem: { item: i } });
 						}
 					} else if (operation === 'update') {
 						const id = this.getNodeParameter('registeredUserId', i) as string;
@@ -767,8 +773,8 @@ export class MergeAgentHandler implements INodeType {
 							};
 						}
 
-						const result = await updateRegisteredUser(this, id, body as any);
-						returnData.push({ json: result as any, pairedItem: { item: i } });
+						const result = await updateRegisteredUser(this, id, body as unknown as Partial<RegisteredUserRequest>);
+						returnData.push({ json: result as unknown as IDataObject, pairedItem: { item: i } });
 					} else if (operation === 'delete') {
 						const id = this.getNodeParameter('registeredUserId', i) as string;
 						await deleteRegisteredUser(this, id);
@@ -793,11 +799,11 @@ export class MergeAgentHandler implements INodeType {
 						}
 
 						const result = await createToolPack(this, { name, description, connectors });
-						returnData.push({ json: result as any, pairedItem: { item: i } });
+						returnData.push({ json: result as unknown as IDataObject, pairedItem: { item: i } });
 					} else if (operation === 'get') {
 						const id = this.getNodeParameter('toolPackId', i) as string;
 						const result = await getToolPack(this, id);
-						returnData.push({ json: result as any, pairedItem: { item: i } });
+						returnData.push({ json: result as unknown as IDataObject, pairedItem: { item: i } });
 					} else if (operation === 'getAll') {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						let packs = await listToolPacks(this);
@@ -806,7 +812,7 @@ export class MergeAgentHandler implements INodeType {
 							packs = packs.slice(0, limit);
 						}
 						for (const p of packs) {
-							returnData.push({ json: p as any, pairedItem: { item: i } });
+							returnData.push({ json: p as unknown as IDataObject, pairedItem: { item: i } });
 						}
 					} else if (operation === 'update') {
 						const id = this.getNodeParameter('toolPackId', i) as string;
@@ -833,8 +839,8 @@ export class MergeAgentHandler implements INodeType {
 							}
 						}
 
-						const result = await updateToolPack(this, id, body as any);
-						returnData.push({ json: result as any, pairedItem: { item: i } });
+						const result = await updateToolPack(this, id, body as unknown as Partial<ToolPackRequest>);
+						returnData.push({ json: result as unknown as IDataObject, pairedItem: { item: i } });
 					} else if (operation === 'delete') {
 						const id = this.getNodeParameter('toolPackId', i) as string;
 						await deleteToolPack(this, id);
@@ -844,7 +850,7 @@ export class MergeAgentHandler implements INodeType {
 					if (operation === 'get') {
 						const slug = this.getNodeParameter('connectorSlug', i) as string;
 						const result = await getConnector(this, slug);
-						returnData.push({ json: result as any, pairedItem: { item: i } });
+						returnData.push({ json: result as unknown as IDataObject, pairedItem: { item: i } });
 					} else if (operation === 'getAll') {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 						let connectors = await listConnectors(this);
@@ -853,7 +859,7 @@ export class MergeAgentHandler implements INodeType {
 							connectors = connectors.slice(0, limit);
 						}
 						for (const c of connectors) {
-							returnData.push({ json: c as any, pairedItem: { item: i } });
+							returnData.push({ json: c as unknown as IDataObject, pairedItem: { item: i } });
 						}
 					}
 				} else if (resource === 'linkToken') {
@@ -861,7 +867,7 @@ export class MergeAgentHandler implements INodeType {
 						const registeredUserId = this.getNodeParameter('linkTokenRegisteredUserId', i) as string;
 						const connector = this.getNodeParameter('linkTokenConnector', i) as string;
 						const result = await createLinkToken(this, registeredUserId, connector);
-						returnData.push({ json: result as any, pairedItem: { item: i } });
+						returnData.push({ json: result as unknown as IDataObject, pairedItem: { item: i } });
 					}
 				} else if (resource === 'credential') {
 					if (operation === 'delete') {
@@ -892,7 +898,7 @@ export class MergeAgentHandler implements INodeType {
 							events = events.slice(0, limit);
 						}
 						for (const e of events) {
-							returnData.push({ json: e as any, pairedItem: { item: i } });
+							returnData.push({ json: e as unknown as IDataObject, pairedItem: { item: i } });
 						}
 					}
 				} else if (resource === 'toolSearch') {
@@ -917,7 +923,7 @@ export class MergeAgentHandler implements INodeType {
 							slugs,
 							options.maxResults,
 						);
-						returnData.push({ json: result as any, pairedItem: { item: i } });
+						returnData.push({ json: result as unknown as IDataObject, pairedItem: { item: i } });
 					}
 				}
 			} catch (error) {

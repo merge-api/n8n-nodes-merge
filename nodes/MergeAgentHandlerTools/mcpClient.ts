@@ -1,8 +1,9 @@
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import type {
 	IExecuteFunctions,
 	ILoadOptionsFunctions,
 	IHttpRequestOptions,
+	JsonObject,
 } from 'n8n-workflow';
 
 import type {
@@ -31,17 +32,8 @@ async function makeAuthenticatedRequest(
 				Authorization: `Bearer ${apiKey}`,
 			},
 		});
-	} catch (error: any) {
-		const method = options.method ?? 'GET';
-		const url = options.url;
-		const status =
-			error?.httpCode ?? error?.response?.status ?? error?.cause?.response?.status;
-		const respBody = error?.response?.data ?? error?.cause?.response?.data;
-		const bodyStr = respBody
-			? ` — ${typeof respBody === 'string' ? respBody : JSON.stringify(respBody).slice(0, 500)}`
-			: '';
-		const msg = `Merge API ${status ? `${status} error` : 'request failed'}: ${method} ${url}${bodyStr}`;
-		throw new NodeOperationError(ctx.getNode(), msg);
+	} catch (error) {
+		throw new NodeApiError(ctx.getNode(), error as JsonObject);
 	}
 }
 

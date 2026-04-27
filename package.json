@@ -1,8 +1,9 @@
 {
 	"name": "n8n-nodes-merge",
-	"version": "0.2.6",
+	"version": "0.2.7",
 	"description": "n8n community node for Merge Agent Handler - connect AI agents to Merge Tool Packs",
 	"license": "MIT",
+	"homepage": "https://github.com/merge-api/n8n-nodes-merge#readme",
 	"keywords": [
 		"n8n-community-node-package"
 	],
@@ -38,7 +39,7 @@
 		]
 	},
 	"devDependencies": {
-		"@n8n/node-cli": "^0.18.0",
+		"@n8n/node-cli": "^0.23.0",
 		"eslint": "9.32.0",
 		"prettier": "3.6.2",
 		"typescript": "5.9.2"

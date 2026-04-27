@@ -10,6 +10,11 @@ export class MergeAgentHandlerApi implements ICredentialType {
 
 	displayName = 'Merge Agent Handler API';
 
+	icon: ICredentialType['icon'] = {
+		light: 'file:merge.svg',
+		dark: 'file:merge-dark.svg',
+	};
+
 	documentationUrl = 'https://docs.ah.merge.dev/Overview/Agent-Handler-intro';
 
 	properties: INodeProperties[] = [
