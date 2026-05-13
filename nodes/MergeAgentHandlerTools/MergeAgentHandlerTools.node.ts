@@ -293,6 +293,27 @@ export class MergeAgentHandlerTools implements INodeType {
 					}
 				}
 
+				// Resolve any inline {{ }} expressions in the JSON string.
+				// n8n only auto-resolves expressions when a field is toggled
+				// to expression mode in the UI; users frequently write
+				// `{"id": "{{ $json.id }}"}` in fixed mode and expect it to
+				// work. Re-evaluating with an `=` prefix interpolates per
+				// item (using the same `i` index) and supports values
+				// returned as either a string or an object.
+				if (
+					typeof toolArgumentsRaw === 'string' &&
+					toolArgumentsRaw.includes('{{')
+				) {
+					try {
+						toolArgumentsRaw = this.evaluateExpression(
+							`=${toolArgumentsRaw}`,
+							i,
+						) as unknown;
+					} catch {
+						// Leave as-is; JSON.parse below will surface a useful error
+					}
+				}
+
 				// ── Agent mode: resolve tool ──
 				if (!toolName && agentToolName) {
 					if (!allTools) {

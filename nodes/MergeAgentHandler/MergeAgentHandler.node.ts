@@ -784,7 +784,20 @@ export class MergeAgentHandler implements INodeType {
 					if (operation === 'create') {
 						const name = this.getNodeParameter('toolPackName', i) as string;
 						const description = this.getNodeParameter('toolPackDescription', i) as string;
-						const connectorsRaw = this.getNodeParameter('toolPackConnectors', i);
+						let connectorsRaw = this.getNodeParameter('toolPackConnectors', i) as
+							| string
+							| ToolPackConnectorWrite[];
+						// Resolve inline {{ }} expressions for fixed-mode users.
+						if (typeof connectorsRaw === 'string' && connectorsRaw.includes('{{')) {
+							try {
+								connectorsRaw = this.evaluateExpression(
+									`=${connectorsRaw}`,
+									i,
+								) as typeof connectorsRaw;
+							} catch {
+								// Fall through; JSON.parse will surface the error
+							}
+						}
 						let connectors: ToolPackConnectorWrite[];
 						try {
 							connectors = typeof connectorsRaw === 'string'
@@ -826,10 +839,25 @@ export class MergeAgentHandler implements INodeType {
 						if (updateFields.name) body.name = updateFields.name;
 						if (updateFields.description) body.description = updateFields.description;
 						if (updateFields.connectors) {
+							let connectorsValue: unknown = updateFields.connectors;
+							// Resolve inline {{ }} expressions for fixed-mode users.
+							if (
+								typeof connectorsValue === 'string' &&
+								connectorsValue.includes('{{')
+							) {
+								try {
+									connectorsValue = this.evaluateExpression(
+										`=${connectorsValue}`,
+										i,
+									) as unknown;
+								} catch {
+									// Fall through; JSON.parse will surface the error
+								}
+							}
 							try {
-								body.connectors = typeof updateFields.connectors === 'string'
-									? JSON.parse(updateFields.connectors)
-									: updateFields.connectors;
+								body.connectors = typeof connectorsValue === 'string'
+									? JSON.parse(connectorsValue)
+									: connectorsValue;
 							} catch {
 								throw new NodeOperationError(
 									this.getNode(),
