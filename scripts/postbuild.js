@@ -18,7 +18,7 @@ fs.mkdirSync(path.join(dist, 'types'), { recursive: true });
 fs.mkdirSync(path.join(dist, 'known'), { recursive: true });
 
 // Copy SVG icons and codex .node.json files to dist (tsc only compiles .ts files)
-const nodeDirs = ['MergeAgentHandler', 'MergeAgentHandlerTools'];
+const nodeDirs = ['MergeAgentHandler', 'MergeAgentHandlerTools', 'MergeGatewayChatModel'];
 for (const dir of nodeDirs) {
 	const srcDir = path.resolve(__dirname, '..', 'nodes', dir);
 	const destDir = path.join(dist, 'nodes', dir);
@@ -54,14 +54,24 @@ const { MergeAgentHandler } = require(path.join(
 	dist,
 	'nodes/MergeAgentHandler/MergeAgentHandler.node.js',
 ));
+const { MergeGatewayChatModel } = require(path.join(
+	dist,
+	'nodes/MergeGatewayChatModel/MergeGatewayChatModel.node.js',
+));
 const { MergeAgentHandlerApi } = require(path.join(
 	dist,
 	'credentials/MergeAgentHandlerApi.credentials.js',
 ));
+const { MergeGatewayApi } = require(path.join(
+	dist,
+	'credentials/MergeGatewayApi.credentials.js',
+));
 
 const toolsNode = new MergeAgentHandlerTools();
 const apiNode = new MergeAgentHandler();
+const gatewayNode = new MergeGatewayChatModel();
 const cred = new MergeAgentHandlerApi();
+const gatewayCred = new MergeGatewayApi();
 
 // ── helpers ──
 function applyThemedIconUrl(desc, nodeDir) {
@@ -97,12 +107,21 @@ const apiDesc = { ...apiNode.description };
 applyThemedIconUrl(apiDesc, 'MergeAgentHandler');
 apiDesc.codex = loadCodex('MergeAgentHandler');
 
+const gatewayDesc = { ...gatewayNode.description };
+applyThemedIconUrl(gatewayDesc, 'MergeGatewayChatModel');
+gatewayDesc.codex = loadCodex('MergeGatewayChatModel');
+
 fs.writeFileSync(
 	path.join(dist, 'types/nodes.json'),
-	JSON.stringify([toolsDesc, apiDesc], null, '\t'),
+	JSON.stringify([toolsDesc, apiDesc, gatewayDesc], null, '\t'),
 );
 
 // ── dist/types/credentials.json ──
+const credentialIconUrl = {
+	light: 'icons/n8n-nodes-merge/dist/credentials/merge.svg',
+	dark: 'icons/n8n-nodes-merge/dist/credentials/merge-dark.svg',
+};
+
 fs.writeFileSync(
 	path.join(dist, 'types/credentials.json'),
 	JSON.stringify(
@@ -114,7 +133,18 @@ fs.writeFileSync(
 				properties: cred.properties,
 				authenticate: cred.authenticate,
 				test: cred.test,
+				iconUrl: credentialIconUrl,
 				supportedNodes: ['mergeAgentHandlerTools', 'mergeAgentHandler'],
+			},
+			{
+				name: gatewayCred.name,
+				displayName: gatewayCred.displayName,
+				documentationUrl: gatewayCred.documentationUrl,
+				properties: gatewayCred.properties,
+				authenticate: gatewayCred.authenticate,
+				test: gatewayCred.test,
+				iconUrl: credentialIconUrl,
+				supportedNodes: ['mergeGatewayChatModel'],
 			},
 		],
 		null,
@@ -137,6 +167,11 @@ fs.writeFileSync(
 				sourcePath:
 					'dist/nodes/MergeAgentHandler/MergeAgentHandler.node.js',
 			},
+			mergeGatewayChatModel: {
+				className: 'MergeGatewayChatModel',
+				sourcePath:
+					'dist/nodes/MergeGatewayChatModel/MergeGatewayChatModel.node.js',
+			},
 		},
 		null,
 		'\t',
@@ -152,6 +187,11 @@ fs.writeFileSync(
 				className: 'MergeAgentHandlerApi',
 				sourcePath: 'dist/credentials/MergeAgentHandlerApi.credentials.js',
 				supportedNodes: ['mergeAgentHandlerTools', 'mergeAgentHandler'],
+			},
+			mergeGatewayApi: {
+				className: 'MergeGatewayApi',
+				sourcePath: 'dist/credentials/MergeGatewayApi.credentials.js',
+				supportedNodes: ['mergeGatewayChatModel'],
 			},
 		},
 		null,

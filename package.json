@@ -1,7 +1,7 @@
 {
 	"name": "n8n-nodes-merge",
 	"version": "0.2.9",
-	"description": "n8n community node for Merge Agent Handler - connect AI agents to Merge Tool Packs",
+	"description": "n8n community nodes for Merge - connect AI agents to Merge Tool Packs via Agent Handler and use any LLM provider via Merge Gateway chat models",
 	"license": "MIT",
 	"homepage": "https://github.com/merge-api/n8n-nodes-merge#readme",
 	"keywords": [
@@ -29,13 +29,16 @@
 	],
 	"n8n": {
 		"n8nNodesApiVersion": 1,
+		"aiNodeSdkVersion": 1,
 		"strict": true,
 		"credentials": [
-			"dist/credentials/MergeAgentHandlerApi.credentials.js"
+			"dist/credentials/MergeAgentHandlerApi.credentials.js",
+			"dist/credentials/MergeGatewayApi.credentials.js"
 		],
 		"nodes": [
 			"dist/nodes/MergeAgentHandlerTools/MergeAgentHandlerTools.node.js",
-			"dist/nodes/MergeAgentHandler/MergeAgentHandler.node.js"
+			"dist/nodes/MergeAgentHandler/MergeAgentHandler.node.js",
+			"dist/nodes/MergeGatewayChatModel/MergeGatewayChatModel.node.js"
 		]
 	},
 	"devDependencies": {
@@ -45,6 +48,7 @@
 		"typescript": "5.9.2"
 	},
 	"peerDependencies": {
+		"@n8n/ai-node-sdk": "*",
 		"n8n-workflow": "*"
 	}
 }

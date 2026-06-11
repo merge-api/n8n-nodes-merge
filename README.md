@@ -1,11 +1,12 @@
 # n8n-nodes-merge
 
-Community nodes for [n8n](https://n8n.io/) that integrate with [Merge Agent Handler](https://merge.dev/agent-handler).
+Community nodes for [n8n](https://n8n.io/) that integrate with [Merge Agent Handler](https://merge.dev/agent-handler) and [Merge Gateway](https://www.merge.dev/gateway).
 
-This package provides two nodes:
+This package provides three nodes:
 
 - **Merge Agent Handler** — Manage Merge resources (registered users, tool packs, connectors, and more) directly from n8n workflows
 - **Merge Agent Handler MCP** — Connect to Merge Tool Packs via MCP to call integration tools, either standalone or as an AI agent tool
+- **Merge Gateway Chat Model** — Use chat models from any provider (OpenAI, Anthropic, Google, and more) in AI Agents and chains via Merge Gateway
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
@@ -117,6 +118,20 @@ If a connector hasn't been authenticated yet for the selected registered user:
 
 ![Authenticate connector output with magic link](docs/images/authenticate_connector.png)
 
+### Merge Gateway Chat Model
+
+A chat model sub-node that connects AI Agent, chain, and other LangChain root nodes to [Merge Gateway](https://www.merge.dev/gateway) — Merge's multi-provider LLM gateway. One credential gives you access to models from OpenAI, Anthropic, Google, and more, with centralized usage tracking, routing, and spend controls.
+
+#### Setup
+
+1. Add an **AI Agent** (or another AI chain node) to your workflow
+2. For the agent's **Chat Model**, select **Merge Gateway Chat Model**
+3. Create or select your **Merge Gateway API** credential (see [Credentials](#credentials))
+4. Pick a **Model** from the dropdown (the list is loaded live from the gateway, e.g. `openai/gpt-4o` or `anthropic/claude-opus-4.6`)
+5. Optionally tune **Options** (temperature, max tokens, response format, retries, and more)
+
+> **Note:** The Merge Gateway Chat Model node is built on n8n's official AI node SDK and requires n8n 2.16.0 or later.
+
 ## Key Concepts
 
 **Tool Packs** are bundles of connectors that define which third-party integrations your AI agent can access. Each Tool Pack contains one or more connectors (e.g., Greenhouse, Salesforce, Jira) and exposes their capabilities as tools that can be called. You can create and manage Tool Packs using the **Merge Agent Handler** node in n8n or in the [Merge Agent Handler dashboard](https://ah.merge.dev/tool-packs).
@@ -145,12 +160,21 @@ To authenticate with Merge Agent Handler:
 3. Copy your **Production** or **Test Access Key**
 4. In n8n, create a new **Merge Agent Handler API** credential and paste the key
 
-Both nodes share the same credential.
+The Merge Agent Handler and Merge Agent Handler MCP nodes share this credential.
+
+### Merge Gateway API
+
+To authenticate with Merge Gateway:
+
+1. Log in to the [Merge Gateway dashboard](https://gateway.merge.dev/)
+2. Navigate to **Settings > API Keys** and create an API key
+3. In n8n, create a new **Merge Gateway API** credential and paste the key
 
 ## Compatibility
 
 - Requires n8n version 1.50.0 or later
-- Tested with n8n v2.9.4
+- The Merge Gateway Chat Model node requires n8n 2.16.0 or later (built on n8n's official AI node SDK)
+- Tested with n8n v2.9.4 (Agent Handler nodes) and v2.25.7 (Merge Gateway Chat Model)
 
 ## Resources
 
@@ -158,6 +182,8 @@ Both nodes share the same credential.
 - [Merge Agent Handler Documentation](https://docs.ah.merge.dev/Overview/Agent-Handler-intro)
 - [Merge Agent Handler API Reference](https://docs.ah.merge.dev/api-reference/overview)
 - [Merge Agent Handler Dashboard](https://ah.merge.dev/)
+- [Merge Gateway Documentation](https://docs.merge.dev/merge-gateway/get-started)
+- [Merge Gateway Dashboard](https://gateway.merge.dev/)
 - [n8n Community Nodes Documentation](https://docs.n8n.io/integrations/community-nodes/)
 
 ## License

@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-merge.mergeGatewayChatModel",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["AI"],
+	"subcategories": {
+		"AI": ["Language Models", "Root Nodes"],
+		"Language Models": ["Chat Models (Recommended)"]
+	},
+	"alias": ["merge", "gateway", "llm", "chat model", "language model", "openai", "anthropic", "gemini"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://docs.merge.dev/merge-gateway/get-started"
+			}
+		]
+	}
+}
